@@ -36,9 +36,5 @@ TodoItem.init({
         modelName: 'todoitems'
     });
 
-TodoList.hasOne(TodoItem, {
-    onDelete: 'RESTRICT',
-    onUpdate: 'RESTRICT'
-  });
 
 module.exports = { TodoItem }
