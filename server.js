@@ -24,13 +24,20 @@ app.get('/', (req, res) => {
 });
 //Get todo lists
 app.get('/todolist', async (req, res) => {
-    sequelize.authenticate();
-    await sequelize.sync();
-    allTodoLists = await TodoList.findAll();
-    res.status(200).json(allTodoLists);
+    try {
+        sequelize.authenticate();
+        await sequelize.sync();
+        allTodoLists = await TodoList.findAll();
+        res.status(200).json(allTodoLists);
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send('Something went wrong')
+    }
 });
 //Create todo lists
 app.post('/todolist', async (req, res) => {
+    try{
     sequelize.authenticate();
     await sequelize.sync();
     let lists = req.body.TodoLists
@@ -38,7 +45,12 @@ app.post('/todolist', async (req, res) => {
         let title = list.title;
         await TodoList.create({ title: title });
     }
-    res.status(200).send('Todo list saved  ');
+    res.status(200).send('Todo list saved');
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send('Something went wrong')
+    }
 });
 //Delete todo list
 app.delete('/todolist', async (req, res) => {
@@ -48,11 +60,11 @@ app.delete('/todolist', async (req, res) => {
     try {
         for (let list of lists) {
             let id = list.id;
-            row = await TodoList.findOne({where: {id: id}});
-            if(row){
+            row = await TodoList.findOne({ where: { id: id } });
+            if (row) {
                 await row.destroy()
                 console.log(`${id} id list deleted`);
-            } else{
+            } else {
                 console.log('Row not found');
             }
         }
@@ -65,18 +77,18 @@ app.delete('/todolist', async (req, res) => {
 
 });
 //Update todo list
-app.put('/todolist', async (req, res)=>{
+app.put('/todolist', async (req, res) => {
     sequelize.authenticate();
     await sequelize.sync();
     let lists = req.body.TodoLists
     try {
         for (let list of lists) {
             let id = list.id;
-            row = await TodoList.findOne({where: {id: id}});
-            if(row){
-                await TodoList.update({title: list.title}, {where: {id: id}});
+            row = await TodoList.findOne({ where: { id: id } });
+            if (row) {
+                await TodoList.update({ title: list.title }, { where: { id: id } });
                 console.log(`${id} id list updated`);
-            } else{
+            } else {
                 console.log('Row not found');
             }
         }
