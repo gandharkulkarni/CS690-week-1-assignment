@@ -42,7 +42,7 @@ app.post('/todolist', async (req, res) => {
 });
 //Delete todo list
 app.delete('/todolist', async (req, res) => {
-    console.log(req.body)
+    sequelize.authenticate();
     await sequelize.sync()
     let lists = req.body.TodoLists
     try {
@@ -51,12 +51,36 @@ app.delete('/todolist', async (req, res) => {
             row = await TodoList.findOne({where: {id: id}});
             if(row){
                 await row.destroy()
-                console.log(`${id} list deleted`);
+                console.log(`${id} id list deleted`);
             } else{
                 console.log('Row not found');
             }
         }
         res.status(200).send('Todo lists deleted')
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send('Something went wrong');
+    }
+
+});
+//Update todo list
+app.put('/todolist', async (req, res)=>{
+    sequelize.authenticate();
+    await sequelize.sync();
+    let lists = req.body.TodoLists
+    try {
+        for (let list of lists) {
+            let id = list.id;
+            row = await TodoList.findOne({where: {id: id}});
+            if(row){
+                await TodoList.update({title: list.title}, {where: {id: id}});
+                console.log(`${id} id list updated`);
+            } else{
+                console.log('Row not found');
+            }
+        }
+        res.status(200).send('Todo lists updated')
     }
     catch (e) {
         console.log(e);
