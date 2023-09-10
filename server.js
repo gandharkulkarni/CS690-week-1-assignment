@@ -84,7 +84,7 @@ app.put('/todolist', async (req, res) => {
     try {
         for (let list of lists) {
             let id = list.id;
-            row = await TodoList.findOne({ where: { id: id } });
+            let row = await TodoList.findOne({ where: { id: id } });
             if (row) {
                 await TodoList.update({ title: list.title }, { where: { id: id } });
                 console.log(`${id} id list updated`);
@@ -129,6 +129,32 @@ app.get('/todoitem', async(req, res)=>{
         console.log(todoListId)
         allTodoItems = await TodoItem.findAll({where: {todo_list_id: todoListId}});
         res.status(200).json(allTodoItems);
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send('Something went wrong');
+    }
+});
+
+//Delete todo items
+app.delete('/todoitem', async(req, res)=>{
+    try{
+        sequelize.authenticate();
+        await sequelize.sync()
+        let todoItems = req.body.todoItems
+        for(let item of todoItems){
+            let id = item.id;
+            let todoListId = item.todoListId;
+            let row = await TodoItem.findOne({ where: { id: id, todo_list_id: todoListId } });
+            if(row){
+                await row.destroy();
+                console.log(`${id} id todo item deleted`);
+            }
+            else{
+                console.log('Row not found');
+            }
+        }
+        res.status(200).send('Todo Items removed');
     }
     catch (e) {
         console.log(e);
