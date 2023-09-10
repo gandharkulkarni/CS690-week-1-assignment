@@ -100,6 +100,41 @@ app.put('/todolist', async (req, res) => {
     }
 
 });
+//Create a todo item
+app.post('/todoitem', async(req, res)=>{
+    try{
+        sequelize.authenticate();
+        await sequelize.sync();
+        let todoItems = req.body.items
+        for(let item of todoItems){
+            let todoListId = item.todoListId;
+            let content = item.content;
+            let dueDate = item.dueDate;
+            let isComplete = item.isComplete;
+            console.log(todoListId, content, dueDate, isComplete);
+            await TodoItem.create({ todo_list_id: todoListId, content: content, due_date: dueDate, is_complete: isComplete });
+
+        }
+        res.status(200).send('Todo item added')
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send('Something went wrong');
+    }
+});
+//Get todo item
+app.get('/todoitem', async(req, res)=>{
+    try{
+        let todoListId = req.body.todoListId
+        console.log(todoListId)
+        allTodoItems = await TodoItem.findAll({where: {todo_list_id: todoListId}});
+        res.status(200).json(allTodoItems);
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send('Something went wrong');
+    }
+});
 
 app.listen(PORT, HOST, () => {
     console.log(`Server started listening on ${PORT}`)
