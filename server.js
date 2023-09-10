@@ -37,15 +37,15 @@ app.get('/todolist', async (req, res) => {
 });
 //Create todo lists
 app.post('/todolist', async (req, res) => {
-    try{
-    sequelize.authenticate();
-    await sequelize.sync();
-    let lists = req.body.TodoLists
-    for (let list of lists) {
-        let title = list.title;
-        await TodoList.create({ title: title });
-    }
-    res.status(200).send('Todo list saved');
+    try {
+        sequelize.authenticate();
+        await sequelize.sync();
+        let lists = req.body.TodoLists
+        for (let list of lists) {
+            let title = list.title;
+            await TodoList.create({ title: title });
+        }
+        res.status(200).send('Todo list saved');
     }
     catch (e) {
         console.log(e);
@@ -101,12 +101,12 @@ app.put('/todolist', async (req, res) => {
 
 });
 //Create a todo item
-app.post('/todoitem', async(req, res)=>{
-    try{
+app.post('/todoitem', async (req, res) => {
+    try {
         sequelize.authenticate();
         await sequelize.sync();
-        let todoItems = req.body.items
-        for(let item of todoItems){
+        let todoItems = req.body.todoItems
+        for (let item of todoItems) {
             let todoListId = item.todoListId;
             let content = item.content;
             let dueDate = item.dueDate;
@@ -123,11 +123,11 @@ app.post('/todoitem', async(req, res)=>{
     }
 });
 //Get todo item
-app.get('/todoitem', async(req, res)=>{
-    try{
+app.get('/todoitem', async (req, res) => {
+    try {
         let todoListId = req.body.todoListId
         console.log(todoListId)
-        allTodoItems = await TodoItem.findAll({where: {todo_list_id: todoListId}});
+        allTodoItems = await TodoItem.findAll({ where: { todo_list_id: todoListId } });
         res.status(200).json(allTodoItems);
     }
     catch (e) {
@@ -137,24 +137,51 @@ app.get('/todoitem', async(req, res)=>{
 });
 
 //Delete todo items
-app.delete('/todoitem', async(req, res)=>{
-    try{
+app.delete('/todoitem', async (req, res) => {
+    try {
         sequelize.authenticate();
         await sequelize.sync()
         let todoItems = req.body.todoItems
-        for(let item of todoItems){
+        for (let item of todoItems) {
             let id = item.id;
             let todoListId = item.todoListId;
             let row = await TodoItem.findOne({ where: { id: id, todo_list_id: todoListId } });
-            if(row){
+            if (row) {
                 await row.destroy();
                 console.log(`${id} id todo item deleted`);
             }
-            else{
+            else {
                 console.log('Row not found');
             }
         }
-        res.status(200).send('Todo Items removed');
+        res.status(200).send('Todo items removed');
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send('Something went wrong');
+    }
+});
+//Update todo item
+app.put('/todoitem', async (req, res) => {
+    try {
+        sequelize.authenticate();
+        await sequelize.sync()
+        let todoItems = req.body.todoItems
+        for (let item of todoItems) {
+            let id = item.id;
+            let todoListId = item.todoListId;
+            let row = TodoItem.findOne({ where: { id: id, todo_list_id: todoListId } });
+            if (row) {
+                let content = item.content;
+                let dueDate = item.dueDate;
+                let isComplete = item.isComplete;
+                await TodoItem.update({ content: content, due_date: dueDate, is_complete: isComplete }, { where: { id: id, todo_list_id: todoListId } });
+                console.log(`${id} id list updated`);
+            } else {
+                console.log('Row not found');
+            }
+        }
+        res.status(200).send('Todo items updated');
     }
     catch (e) {
         console.log(e);
