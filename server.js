@@ -40,7 +40,7 @@ app.post('/todolist', async (req, res) => {
     try {
         sequelize.authenticate();
         await sequelize.sync();
-        let lists = req.body.TodoLists
+        let lists = req.body.todo_lists
         for (let list of lists) {
             let title = list.title;
             await TodoList.create({ title: title });
@@ -56,7 +56,7 @@ app.post('/todolist', async (req, res) => {
 app.delete('/todolist', async (req, res) => {
     sequelize.authenticate();
     await sequelize.sync()
-    let lists = req.body.TodoLists
+    let lists = req.body.todo_lists
     try {
         for (let list of lists) {
             let id = list.id;
@@ -80,19 +80,28 @@ app.delete('/todolist', async (req, res) => {
 app.put('/todolist', async (req, res) => {
     sequelize.authenticate();
     await sequelize.sync();
-    let lists = req.body.TodoLists
+    let lists = req.body.todo_lists
+    let isValid = true
     try {
         for (let list of lists) {
             let id = list.id;
-            let row = await TodoList.findOne({ where: { id: id } });
-            if (row) {
-                await TodoList.update({ title: list.title }, { where: { id: id } });
-                console.log(`${id} id list updated`);
-            } else {
-                console.log('Row not found');
+            if (id === undefined) {
+                res.status(400).send('Invalid Request. Please provide valid Id');
+                isValid = false;
+            }
+            else {
+                let row = await TodoList.findOne({ where: { id: id } });
+                if (row) {
+                    await TodoList.update({ title: list.title }, { where: { id: id } });
+                    console.log(`${id} id list updated`);
+                } else {
+                    console.log('Row not found');
+                }
             }
         }
-        res.status(200).send('Todo lists updated')
+        if (isValid) {
+            res.status(200).send('Todo lists updated')
+        }
     }
     catch (e) {
         console.log(e);
@@ -105,14 +114,18 @@ app.post('/todoitem', async (req, res) => {
     try {
         sequelize.authenticate();
         await sequelize.sync();
-        let todoItems = req.body.todoItems
+        let todoItems = req.body.todo_items
         for (let item of todoItems) {
-            let todoListId = item.todoListId;
+            let todoListId = item.todo_list_id;
             let content = item.content;
-            let dueDate = item.dueDate;
-            let isComplete = item.isComplete;
-            console.log(todoListId, content, dueDate, isComplete);
-            await TodoItem.create({ todo_list_id: todoListId, content: content, due_date: dueDate, is_complete: isComplete });
+            let dueDate = item.due_date;
+            let isCompleted = item.is_completed;
+            if (todoListId === undefined || content === undefined || dueDate === undefined) {
+                res.status(400).send(`Invalid request. Please provide valid Todo List Id, Content, Due Date`)
+            }
+            else {
+                await TodoItem.create({ todo_list_id: todoListId, content: content, due_date: dueDate, is_completed: isCompleted });
+            }
 
         }
         res.status(200).send('Todo item added')
@@ -125,10 +138,14 @@ app.post('/todoitem', async (req, res) => {
 //Get todo item
 app.get('/todoitem', async (req, res) => {
     try {
-        let todoListId = req.body.todoListId
-        console.log(todoListId)
-        allTodoItems = await TodoItem.findAll({ where: { todo_list_id: todoListId } });
-        res.status(200).json(allTodoItems);
+        let todoListId = req.body.todo_list_id
+        if (todoListId === undefined) {
+            res.status(400).send('Please provide valid Todo List Id');
+        }
+        else {
+            allTodoItems = await TodoItem.findAll({ where: { todo_list_id: todoListId } });
+            res.status(200).json(allTodoItems);
+        }
     }
     catch (e) {
         console.log(e);
@@ -141,10 +158,10 @@ app.delete('/todoitem', async (req, res) => {
     try {
         sequelize.authenticate();
         await sequelize.sync()
-        let todoItems = req.body.todoItems
+        let todoItems = req.body.todo_items
         for (let item of todoItems) {
             let id = item.id;
-            let todoListId = item.todoListId;
+            let todoListId = item.todo_list_id;
             let row = await TodoItem.findOne({ where: { id: id, todo_list_id: todoListId } });
             if (row) {
                 await row.destroy();
@@ -166,22 +183,37 @@ app.put('/todoitem', async (req, res) => {
     try {
         sequelize.authenticate();
         await sequelize.sync()
-        let todoItems = req.body.todoItems
+        let todoItems = req.body.todo_items
+        let isValid = true
         for (let item of todoItems) {
             let id = item.id;
-            let todoListId = item.todoListId;
-            let row = TodoItem.findOne({ where: { id: id, todo_list_id: todoListId } });
-            if (row) {
-                let content = item.content;
-                let dueDate = item.dueDate;
-                let isComplete = item.isComplete;
-                await TodoItem.update({ content: content, due_date: dueDate, is_complete: isComplete }, { where: { id: id, todo_list_id: todoListId } });
-                console.log(`${id} id list updated`);
-            } else {
-                console.log('Row not found');
+            let todoListId = item.todo_list_id;
+            if (id === undefined || todoListId === undefined) {
+                isValid = false
+                res.status(400).send('Invalid request. Please provide valid values for Id and Todo List Id');
+            }
+            else {
+                let row = await TodoItem.findOne({ where: { id: id, todo_list_id: todoListId } });
+                if (row) {
+                    let content = item.content;
+                    let dueDate = item.due_date;
+                    let isCompleted = item.is_completed;
+                    let resp = await TodoItem.update({
+                        content: content !== undefined ? content : row.content,
+                        due_date: dueDate !== undefined ? dueDate : row.due_date,
+                        is_completed: isCompleted !== undefined ? isCompleted : row.is_completed
+                    },
+                        { where: { id: id, todo_list_id: todoListId } });
+                    console.log(resp);
+                    console.log(`${id} id list updated`);
+                } else {
+                    console.log('Row not found');
+                }
             }
         }
-        res.status(200).send('Todo items updated');
+        if (isValid) {
+            res.status(200).send('Todo items updated');
+        }
     }
     catch (e) {
         console.log(e);
