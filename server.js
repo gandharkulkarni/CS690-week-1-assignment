@@ -204,7 +204,6 @@ app.put('/todoitem', async (req, res) => {
                         is_completed: isCompleted !== undefined ? isCompleted : row.is_completed
                     },
                         { where: { id: id, todo_list_id: todoListId } });
-                    console.log(resp);
                     console.log(`${id} id list updated`);
                 } else {
                     console.log('Row not found');
