@@ -11,8 +11,9 @@ const { sequelize } = require('./database/sequelize')
 app.use(bodyparser.json())
 app.use(bodyparser.urlencoded({ extended: true }))
 app.get('/', (req, res) => {
-    res.status(200).send(`Hey there,
-    Here's the list of api endpoints
+    res.status(200).send(`
+    <h1>Hey there,
+    Here's the list of api endpoints </h1>
     <br><br> GET: /todolist Get all of the TodoLists
     <br><br> POST: /todolist  Create a TodoList
     <br><br> DELETE: /todolist Delete a TodoList
@@ -138,7 +139,7 @@ app.post('/todoitem', async (req, res) => {
 //Get todo item
 app.get('/todoitem', async (req, res) => {
     try {
-        let todoListId = req.body.todo_list_id
+        let todoListId = req.query.todo_list_id
         if (todoListId === undefined) {
             res.status(400).send('Please provide valid Todo List Id');
         }
