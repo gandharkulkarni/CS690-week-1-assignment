@@ -6,10 +6,12 @@ const bodyparser = require('body-parser')
 const { TodoList } = require('./models/TodoList')
 const { TodoItem } = require('./models/TodoItem')
 const { sequelize } = require('./database/sequelize')
+const cors = require('cors');
 
 
 app.use(bodyparser.json())
 app.use(bodyparser.urlencoded({ extended: true }))
+app.use(cors());
 app.get('/', (req, res) => {
     res.status(200).send(`
     <h1>Hey there,
@@ -54,6 +56,7 @@ app.post('/todolist', async (req, res) => {
     }
 });
 //Delete todo list
+/*
 app.delete('/todolist', async (req, res) => {
     sequelize.authenticate();
     await sequelize.sync()
@@ -70,6 +73,28 @@ app.delete('/todolist', async (req, res) => {
             }
         }
         res.status(200).send('Todo lists deleted')
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send('Something went wrong');
+    }
+
+});
+*/
+app.delete('/todolist', async (req, res) => {
+    sequelize.authenticate();
+    await sequelize.sync()
+    let todoListId = req.query.id
+    try {
+        row = await TodoList.findOne({ where: { id: todoListId } });
+        if (row) {
+            await row.destroy()
+            console.log(`${todoListId} id list deleted`);
+            res.status(200).send('Todo list deleted')
+        } else {
+            console.log('Row not found');
+            res.status(200).send('Todo list not found')
+        }        
     }
     catch (e) {
         console.log(e);
@@ -155,6 +180,7 @@ app.get('/todoitem', async (req, res) => {
 });
 
 //Delete todo items
+/*
 app.delete('/todoitem', async (req, res) => {
     try {
         sequelize.authenticate();
@@ -173,6 +199,29 @@ app.delete('/todoitem', async (req, res) => {
             }
         }
         res.status(200).send('Todo items removed');
+    }
+    catch (e) {
+        console.log(e);
+        res.status(500).send('Something went wrong');
+    }
+});
+*/
+app.delete('/todoitem', async (req, res) => {
+    try {
+        sequelize.authenticate();
+        await sequelize.sync()
+        let todoItemId = req.query.id
+        let todoListId = req.query.todo_list_id
+        let row = await TodoItem.findOne({ where: { id: todoItemId, todo_list_id: todoListId } });
+        if (row) {
+            await row.destroy();
+            console.log(`${todoItemId} id todo item deleted`);
+            res.status(200).send('Todo items removed');
+        }
+        else {
+            console.log('Row not found');
+            res.status(200).send('Todo item not found');
+        }
     }
     catch (e) {
         console.log(e);
@@ -205,7 +254,7 @@ app.put('/todoitem', async (req, res) => {
                         is_completed: isCompleted !== undefined ? isCompleted : row.is_completed
                     },
                         { where: { id: id, todo_list_id: todoListId } });
-                    console.log(`${id} id list updated`);
+                    console.log(`${id} id list item updated`);
                 } else {
                     console.log('Row not found');
                 }
